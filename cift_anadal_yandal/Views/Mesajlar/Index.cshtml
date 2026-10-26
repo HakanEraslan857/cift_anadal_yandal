@@ -1,0 +1,53 @@
+﻿@model IEnumerable<cift_anadal_yandal.Models.Mesajlar>
+
+@{
+    ViewData["Title"] = "Koordinatör ile İletişim";
+    var ogrenci = ViewBag.Ogrenci as cift_anadal_yandal.Models.Ogrenciler;
+}
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Koordinatör ile Mesajlaşma</h5>
+                    <span class="badge bg-light text-dark">Mesajlar Kayıt Altındadır ve Silinemez</span>
+                </div>
+                <div class="card-body" style="max-height: 450px; overflow-y: auto; background-color: #f8f9fa;">
+                    @if (!Model.Any())
+                    {
+                        <div class="text-center text-muted py-4">
+                            Henüz mesaj bulunmamaktadır. Koordinatöre sorunuz varsa aşağıdan gönderebilirsiniz.
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var m in Model)
+                        {
+                            bool benMiyim = m.GonderenRol == "Ogrenci";
+                            <div class="d-flex mb-3 @(benMiyim ? "justify-content-end" : "justify-content-start")">
+                                <div class="p-3 rounded-3 shadow-sm @(benMiyim ? "bg-primary text-white" : "bg-white border text-dark")" style="max-width: 75%;">
+                                    <div class="small fw-bold mb-1 @(benMiyim ? "text-light" : "text-primary")">
+                                        @m.GonderenAd
+                                    </div>
+                                    <div class="mb-2" style="white-space: pre-wrap;">@m.MesajMetni</div>
+                                    <div class="text-end" style="font-size: 0.75rem; opacity: 0.85;">
+                                        @m.GonderimTarihi.ToString("dd.MM.yyyy HH:mm:ss")
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="card-footer bg-white">
+                    <form asp-action="OgrenciMesajGonder" method="post">
+                        <div class="input-group">
+                            <textarea name="mesajMetni" class="form-control" rows="2" placeholder="Koordinatöre mesajınızı yazın..." required></textarea>
+                            <button type="submit" class="btn btn-primary px-4 fw-bold">Gönder</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

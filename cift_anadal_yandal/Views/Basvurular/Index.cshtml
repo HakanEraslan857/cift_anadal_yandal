@@ -1,0 +1,122 @@
+@model IEnumerable<cift_anadal_yandal.Models.Basvurular>
+
+@{
+    ViewData["Title"] = "Başvurular";
+    bool basvuruAcikMi = ViewBag.BasvuruAcikMi ?? false;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>@(User.IsInRole("Ogrenci") ? "Başvurularım" : "Başvuru Listesi")</h2>
+        @if (User.IsInRole("Ogrenci"))
+        {
+            @if (basvuruAcikMi)
+            {
+                <a asp-action="Create" class="btn btn-primary">Yeni Başvuru Yap</a>
+            }
+            else
+            {
+                <span class="badge bg-secondary p-2">Aktif Başvuru Hakkınız Kullanıldı</span>
+            }
+        }
+    </div>
+
+    @if (TempData["BilgiMesaji"] != null)
+    {
+        <div class="alert alert-warning fw-bold">
+            @TempData["BilgiMesaji"]
+        </div>
+    }
+
+    <table class="table table-bordered table-striped table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Öğrenci No</th>
+                <th>Ad Soyad</th>
+                <th>Ana Bölüm</th>
+                <th>Başvuru Türü</th>
+                <th>GNO</th>
+                <th>Başvuru Tarihi</th>
+                <th>Durum</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Ogrenci?.OgrenciNo</td>
+                    <td>@item.Ogrenci?.Ad @item.Ogrenci?.Soyad</td>
+                    <td>@item.Ogrenci?.AnaBolum?.BolumAdi</td>
+                    <td class="fw-bold">@item.BasvuruTuru</td>
+                    <td>@item.Ogrenci?.GenelNotOrtalamasi</td>
+                    <td>@item.BasvuruTarihi?.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>
+                        @if (item.Durum == "Beklemede")
+                        {
+                            <span class="badge bg-warning text-dark">Beklemede</span>
+                        }
+                        else if (item.Durum == "Onaylandı" || item.Durum == "Kabul Edildi")
+                        {
+                            <span class="badge bg-success">@item.Durum</span>
+                        }
+                        else if (item.Durum == "Reddedildi")
+                        {
+                            <span class="badge bg-danger">Reddedildi</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">@item.Durum</span>
+                        }
+                    </td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@item.BasvuruId" class="btn btn-sm btn-info text-white me-1">İncele</a>
+
+                        @if (User.IsInRole("Koordinator"))
+                        {
+                            @if (item.Durum == "Beklemede")
+                            {
+                                <button type="button" class="btn btn-sm btn-success me-1" onclick="onayKutusuAc('@Url.Action("Onayla", "Basvurular", new { id = item.BasvuruId })')">Kabul Et</button>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="onayKutusuAc('@Url.Action("Reddet", "Basvurular", new { id = item.BasvuruId })')">Reddet</button>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Sonuçlandı (Kilitli)</span>
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- ONAY KUTUCUĞU (MODAL) -->
+<div class="modal fade" id="onayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title fw-bold text-dark">İşlem Onayı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <h5 class="fw-bold mb-2">Bu işlemi onaylıyor musunuz ?</h5>
+                <p class="text-muted mb-0">Onayladıktan sonra bu işlem geri alınamaz.</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Hayır</button>
+                <a id="onayEvetBtn" href="#" class="btn btn-primary px-4">Evet</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function onayKutusuAc(hedefUrl) {
+            document.getElementById("onayEvetBtn").setAttribute("href", hedefUrl);
+            var myModal = new bootstrap.Modal(document.getElementById('onayModal'));
+            myModal.show();
+        }
+    </script>
+}

@@ -1,0 +1,149 @@
+﻿@model IEnumerable<cift_anadal_yandal.Models.Dersler>
+
+@{
+    ViewData["Title"] = "Ders Seçimi";
+    bool basvuruOnayliMi = ViewBag.BasvuruOnayliMi ?? false;
+    var ogrenci = ViewBag.Ogrenci as cift_anadal_yandal.Models.Ogrenciler;
+    var mevcutSecimler = ViewBag.MevcutSecimler as List<cift_anadal_yandal.Models.OgrenciDersSecimleri>;
+    string secimDurumu = ViewBag.SecimDurumu as string;
+}
+
+<div class="container mt-4 mb-5">
+    <h2>Çift Anadal / Yandal Ders Seçimi</h2>
+    <hr />
+
+    @if (!basvuruOnayliMi)
+    {
+        <div class="alert alert-warning py-4 text-center shadow-sm">
+            <h4 class="fw-bold text-dark mb-2">Ders Seçimi Henüz Aktif Değil!</h4>
+            <p class="mb-0 text-muted">
+                Ders seçimi yapabilmeniz için öncelikle ÇAP / Yandal başvurunuzun <strong>Koordinatör tarafından onaylanması</strong> gerekmektedir.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="card mb-4 bg-light border-0 shadow-sm">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3"><strong>Öğrenci No:</strong> @ogrenci?.OgrenciNo</div>
+                    <div class="col-md-3"><strong>Adı Soyadı:</strong> @ogrenci?.Ad @ogrenci?.Soyad</div>
+                    <div class="col-md-3"><strong>Anadal:</strong> @ogrenci?.AnaBolum?.BolumAdi</div>
+                    <div class="col-md-3"><strong>Program:</strong> <span class="badge bg-primary">@ogrenci?.BasvuruTuru</span></div>
+                </div>
+            </div>
+        </div>
+
+        @if (TempData["Hata"] != null)
+        {
+            <div class="alert alert-danger fw-bold">@TempData["Hata"]</div>
+        }
+
+        @if (!string.IsNullOrEmpty(secimDurumu) && secimDurumu != "Reddedildi")
+        {
+            <div class="alert @(secimDurumu == "Onaylandı" ? "alert-success" : "alert-info") fw-bold d-flex justify-content-between align-items-center">
+                <span>Ders Seçim Durumunuz: @secimDurumu</span>
+                <span class="badge bg-dark fs-6">Toplam Seçilen AKTS: @mevcutSecimler.Sum(x => x.Ders?.Akts ?? 0)</span>
+            </div>
+
+            <h5 class="mt-4 mb-3 text-primary">Seçtiğiniz Dersler</h5>
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Ders Kodu</th>
+                        <th>Ders Adı</th>
+                        <th>Kredisi (AKTS)</th>
+                        <th>Muafiyet / Açıklama</th>
+                        <th>Durum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var secim in mevcutSecimler)
+                    {
+                        <tr>
+                            <td class="fw-bold">@(string.IsNullOrEmpty(secim.Ders?.DersKodu) ? "-" : secim.Ders.DersKodu)</td>
+                            <td>@secim.Ders?.DersAdi</td>
+                            <td class="text-center fw-bold">@secim.Ders?.Akts</td>
+                            <td class="small text-muted">@secim.Ders?.Aciklama</td>
+                            <td>
+                                <span class="badge @(secim.Durum == "Onaylandı" ? "bg-success" : "bg-warning text-dark")">@secim.Durum</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            @if (secimDurumu == "Reddedildi")
+            {
+                <div class="alert alert-danger fw-bold">
+                    Önceki ders seçiminiz koordinatör tarafından reddedilmiştir. Lütfen derslerinizi tekrar seçip onaya gönderiniz.
+                </div>
+            }
+
+            <form asp-action="Kaydet" method="post">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary me-2" onclick="tumunuSec(true)">Tümünü Seç</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="tumunuSec(false)">Seçimi Temizle</button>
+                    </div>
+                    <div class="fs-5 fw-bold text-primary">
+                        Seçilen Toplam AKTS: <span id="toplamAkts" class="badge bg-primary">0</span> / 135
+                    </div>
+                </div>
+
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 60px;" class="text-center">Seç</th>
+                            <th style="width: 130px;">Ders Kodu</th>
+                            <th>Ders Adı</th>
+                            <th style="width: 120px;" class="text-center">Kredisi (AKTS)</th>
+                            <th>Muafiyet / Protokol Notu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ders in Model)
+                        {
+                            <tr>
+                                <td class="text-center">
+                                    <input type="checkbox" name="secilenDersIds" value="@ders.DersId" data-akts="@ders.Akts" class="form-check-input ders-checkbox" style="transform: scale(1.3);" onchange="aktsHesapla()" />
+                                </td>
+                                <td class="fw-bold">@ders.DersKodu</td>
+                                <td>@ders.DersAdi</td>
+                                <td class="text-center fw-bold">@ders.Akts</td>
+                                <td class="small text-muted">@ders.Aciklama</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-success btn-lg px-5 fw-bold">Ders Seçimini Koordinatör Onayına Gönder</button>
+                </div>
+            </form>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function aktsHesapla() {
+            var checkboxes = document.querySelectorAll('.ders-checkbox:checked');
+            var toplam = 0;
+            checkboxes.forEach(function (cb) {
+                toplam += parseInt(cb.getAttribute('data-akts')) || 0;
+            });
+            document.getElementById('toplamAkts').innerText = toplam;
+        }
+
+        function tumunuSec(durum) {
+            var checkboxes = document.querySelectorAll('.ders-checkbox');
+            checkboxes.forEach(function (cb) {
+                cb.checked = durum;
+            });
+            aktsHesapla();
+        }
+    </script>
+}

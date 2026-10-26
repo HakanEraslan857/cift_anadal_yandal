@@ -1,0 +1,69 @@
+﻿@{
+    ViewData["Title"] = "Sisteme Giriş";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow border-0 rounded-3">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <i class="fa fa-university fa-3x text-primary mb-3"></i>
+                    <h3 class="fw-bold text-primary">Sisteme Giriş</h3>
+                    <p class="text-muted">Lütfen giriş yapacağınız yetki türünü seçin.</p>
+                </div>
+
+                @if (ViewBag.Hata != null)
+                {
+                    <div class="alert alert-danger fw-bold text-center">
+                        @ViewBag.Hata
+                    </div>
+                }
+
+                <form asp-action="Login" method="post">
+
+                    <!-- ROL SEÇİM BUTONLARI (Sekmeler) -->
+                    <div class="btn-group w-100 mb-4 shadow-sm" role="group">
+                        <input type="radio" class="btn-check" name="rol" id="rolOgrenci" value="Ogrenci" checked onchange="etiketDegistir()">
+                        <label class="btn btn-outline-primary" for="rolOgrenci">Öğrenci</label>
+
+                        <input type="radio" class="btn-check" name="rol" id="rolKoordinator" value="Koordinator" onchange="etiketDegistir()">
+                        <label class="btn btn-outline-success" for="rolKoordinator">Koordinatör</label>
+
+                        <input type="radio" class="btn-check" name="rol" id="rolBolumBaskani" value="BolumBaskani" onchange="etiketDegistir()">
+                        <label class="btn btn-outline-danger" for="rolBolumBaskani">Bölüm Bşk.</label>
+                    </div>
+
+                    <!-- GİRİŞ BİLGİLERİ -->
+                    <div class="form-group mb-3">
+                        <!-- Rol Öğrenciyse "Öğrenci Numarası", değilse "Kullanıcı Adı" yazacak -->
+                        <label id="kullaniciLabel" class="fw-bold text-secondary">Öğrenci Numarası</label>
+                        <input type="text" name="kullaniciAdi" class="form-control form-control-lg bg-light" required />
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="fw-bold text-secondary">Şifre</label>
+                        <input type="password" name="sifre" class="form-control form-control-lg bg-light" required />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 btn-lg fw-bold">Giriş Yap</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Hangi butona basıldığını anlayan ve label'ı değiştiren ufak Javascript kodumuz
+        function etiketDegistir() {
+            var ogrenciSecili = document.getElementById("rolOgrenci").checked;
+            var label = document.getElementById("kullaniciLabel");
+
+            if (ogrenciSecili) {
+                label.innerText = "Öğrenci Numarası";
+            } else {
+                label.innerText = "Kullanıcı Adı";
+            }
+        }
+    </script>
+}

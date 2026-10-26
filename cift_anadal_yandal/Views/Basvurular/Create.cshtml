@@ -1,0 +1,104 @@
+@model cift_anadal_yandal.Models.Basvurular
+
+@{
+    ViewData["Title"] = "Yeni Başvuru";
+    var ogrenci = ViewBag.Ogrenci as cift_anadal_yandal.Models.Ogrenciler;
+    bool basvuruAcikMi = ViewBag.BasvuruAcikMi ?? false;
+}
+
+<div class="container mt-4 mb-5">
+    <h2>Bilgisayar Mühendisliği ÇAP / Yandal Başvuru Formu</h2>
+    <hr />
+
+    @if (!basvuruAcikMi)
+    {
+        <div class="alert alert-warning py-4 text-center shadow-sm">
+            <h4 class="fw-bold text-dark mb-2">Aktif Başvuru Hakkınız Bulunmamaktadır</h4>
+            <p class="mb-3 text-muted">
+                Tanımlanan başvuru hakkınızı kullandınız. Koordinatör tarafından yeni bir başvuru açılmadığı sürece tekrar başvuru yapamazsınız.
+            </p>
+            <a asp-action="Index" class="btn btn-primary">Başvurularım Sayfasına Git</a>
+        </div>
+    }
+    else
+    {
+        @if (ViewBag.Hata != null)
+        {
+            <div class="alert alert-danger fw-bold">
+                @ViewBag.Hata
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-md-7">
+                <form asp-action="Create" method="post" enctype="multipart/form-data">
+                    <h4 class="mb-3">Öğrenci ve Başvuru Bilgileriniz</h4>
+                    <p class="text-muted small">Bilgileriniz koordinatör tarafından tanımlanmıştır ve değiştirilemez.</p>
+
+                    <div class="form-group mb-3">
+                        <label class="control-label fw-bold">Öğrenci Numarası</label>
+                        <input type="text" class="form-control bg-light" value="@ogrenci?.OgrenciNo" readonly />
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="control-label fw-bold">Ad</label>
+                            <input type="text" class="form-control bg-light" value="@ogrenci?.Ad" readonly />
+                        </div>
+                        <div class="col">
+                            <label class="control-label fw-bold">Soyad</label>
+                            <input type="text" class="form-control bg-light" value="@ogrenci?.Soyad" readonly />
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="control-label fw-bold">Genel Not Ortalaması (GNO)</label>
+                        <input type="text" class="form-control bg-light" value="@ogrenci?.GenelNotOrtalamasi" readonly />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="control-label fw-bold">Kayıtlı Olduğu Ana Bölüm</label>
+                        <input type="text" class="form-control bg-light" value="@ogrenci?.AnaBolum?.BolumAdi" readonly />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="control-label fw-bold">Başvurulacak Bölüm</label>
+                        <input type="text" class="form-control bg-light" value="Bilgisayar Mühendisliği" readonly />
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="control-label fw-bold">Başvuru Türü</label>
+                        <input type="text" name="BasvuruTuru" class="form-control bg-light fw-bold text-primary" value="@ogrenci?.BasvuruTuru" readonly />
+                    </div>
+
+                    <hr class="my-4" />
+                    <h4 class="mb-3 text-primary">Zorunlu Başvuru Evrakları (Sadece PDF)</h4>
+                    <p class="text-muted small">Başvurunuzun tamamlanabilmesi için aşağıdaki 3 belgeyi eksiksiz ve PDF formatında yüklemeniz gerekmektedir.</p>
+
+                    <div class="form-group mb-3">
+                        <label class="control-label fw-bold">1. Transkript (PDF) <span class="text-danger">*</span></label>
+                        <input type="file" name="transkriptDosyasi" class="form-control" accept=".pdf,application/pdf" required />
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="control-label fw-bold">
+                            2. @(ogrenci?.BasvuruTuru == "Yandal" ? "Yandal Kabul ve Ders Protokol Formu (PDF)" : "Çift Anadal Kabul ve Ders Protokol Formu (PDF)") <span class="text-danger">*</span>
+                        </label>
+                        <input type="file" name="protokolDosyasi" class="form-control" accept=".pdf,application/pdf" required />
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="control-label fw-bold">
+                            3. @(ogrenci?.BasvuruTuru == "Yandal" ? "Yandal Ders Kayıt Formu (PDF)" : "Çift Anadal Ders Kayıt Formu (PDF)") <span class="text-danger">*</span>
+                        </label>
+                        <input type="file" name="dersKayitDosyasi" class="form-control" accept=".pdf,application/pdf" required />
+                    </div>
+
+                    <div class="form-group mt-3">
+                        <input type="submit" value="Başvuruyu Tamamla" class="btn btn-primary w-100 btn-lg" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</div>

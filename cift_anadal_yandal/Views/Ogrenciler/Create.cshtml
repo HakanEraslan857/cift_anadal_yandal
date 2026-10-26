@@ -1,0 +1,69 @@
+@model cift_anadal_yandal.Models.Ogrenciler
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Ogrenciler</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="OgrenciNo" class="control-label"></label>
+                <input asp-for="OgrenciNo" class="form-control" />
+                <span asp-validation-for="OgrenciNo" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Ad" class="control-label"></label>
+                <input asp-for="Ad" class="form-control" />
+                <span asp-validation-for="Ad" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Soyad" class="control-label"></label>
+                <input asp-for="Soyad" class="form-control" />
+                <span asp-validation-for="Soyad" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="GenelNotOrtalamasi" class="control-label"></label>
+                <input asp-for="GenelNotOrtalamasi" class="form-control" />
+                <span asp-validation-for="GenelNotOrtalamasi" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="AnaBolumId" class="control-label fw-bold">Kayıtlı Olduğu Ana Bölüm</label>
+                <select asp-for="AnaBolumId" class="form-control form-select" asp-items="ViewBag.AnaBolumId"></select>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="BasvuruTuru" class="control-label fw-bold text-primary">Başvuru Türü</label>
+                <select asp-for="BasvuruTuru" class="form-control form-select" required>
+                    <option value="">-- Başvuru Türü Seçiniz --</option>
+                    <option value="Çift Anadal">Çift Anadal (ÇAP)</option>
+                    <option value="Yandal">Yandal</option>
+                </select>
+                <span asp-validation-for="BasvuruTuru" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3 mt-2">
+                <label class="control-label fw-bold text-primary">Öğrenci Giriş Şifresi</label>
+                <input type="text" name="OgrenciSifre" class="form-control" placeholder="Öğrencinin sisteme gireceği şifreyi belirleyin" required />
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>

@@ -1,0 +1,186 @@
+@model cift_anadal_yandal.Models.Basvurular
+
+@{
+    ViewData["Title"] = "Başvuru Detayı ve Evraklar";
+}
+
+<div class="container mt-4 mb-5">
+    <h3>Başvuru Detayı ve Yüklenen Evraklar</h3>
+    <hr />
+
+    @if (TempData["Hata"] != null)
+    {
+        <div class="alert alert-danger fw-bold">@TempData["Hata"]</div>
+    }
+    @if (TempData["Basari"] != null)
+    {
+        <div class="alert alert-success fw-bold">@TempData["Basari"]</div>
+    }
+
+    <dl class="row">
+        <dt class="col-sm-4">Öğrenci Numarası</dt>
+        <dd class="col-sm-8">@Model.Ogrenci?.OgrenciNo</dd>
+
+        <dt class="col-sm-4">Öğrenci Adı Soyadı</dt>
+        <dd class="col-sm-8">@Model.Ogrenci?.Ad @Model.Ogrenci?.Soyad</dd>
+
+        <dt class="col-sm-4">Genel Not Ortalaması (GNO)</dt>
+        <dd class="col-sm-8">@Model.Ogrenci?.GenelNotOrtalamasi</dd>
+
+        <dt class="col-sm-4">Başvuru Türü</dt>
+        <dd class="col-sm-8 fw-bold">@Model.BasvuruTuru</dd>
+
+        <dt class="col-sm-4">Başvuru Tarihi</dt>
+        <dd class="col-sm-8">@Model.BasvuruTarihi?.ToString("dd.MM.yyyy HH:mm")</dd>
+
+        <dt class="col-sm-4">Başvuru Durumu</dt>
+        <dd class="col-sm-8 fw-bold">@Model.Durum</dd>
+    </dl>
+
+    <hr class="my-3" />
+    <h5 class="mb-3 text-primary">Kayıt ve Başvuru Evrakları</h5>
+
+    <table class="table table-bordered align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Evrak Adı</th>
+                <th style="width: 200px;" class="text-center">Mevcut Dosya</th>
+                @if (User.IsInRole("Koordinator"))
+                {
+                    <th style="width: 420px;">Evrağı Güncelle / Değiştir (PDF)</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 1. TRANSKRİPT -->
+            <tr>
+                <td class="fw-bold">1. Transkript Belgesi</td>
+                <td class="text-center">
+                    @if (!string.IsNullOrEmpty(Model.TranskriptYolu))
+                    {
+                        <a href="~/evraklar/@Model.TranskriptYolu" target="_blank" class="btn btn-sm btn-outline-primary">PDF Görüntüle / İndir</a>
+                    }
+                    else
+                    {
+                        <span class="text-danger">Yüklenmemiş</span>
+                    }
+                </td>
+                @if (User.IsInRole("Koordinator"))
+                {
+                    <td>
+                        <form asp-controller="Basvurular" asp-action="EvrakGuncelle" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                            <input type="hidden" name="basvuruId" value="@Model.BasvuruId" />
+                            <input type="hidden" name="belgeTuru" value="Transkript" />
+                            <input type="file" name="yeniDosya" class="form-control form-control-sm" accept=".pdf,application/pdf" required />
+                            <button type="submit" class="btn btn-sm btn-warning fw-bold text-nowrap">Değiştir</button>
+                        </form>
+                    </td>
+                }
+            </tr>
+
+            <!-- 2. PROTOKOL FORMU -->
+            <tr>
+                <td class="fw-bold">
+                    2. @(Model.BasvuruTuru == "Yandal" ? "Yandal Kabul ve Ders Protokol Formu" : "Çift Anadal Kabul ve Ders Protokol Formu")
+                </td>
+                <td class="text-center">
+                    @if (!string.IsNullOrEmpty(Model.ProtokolFormuYolu))
+                    {
+                        <a href="~/evraklar/@Model.ProtokolFormuYolu" target="_blank" class="btn btn-sm btn-outline-primary">PDF Görüntüle / İndir</a>
+                    }
+                    else
+                    {
+                        <span class="text-danger">Yüklenmemiş</span>
+                    }
+                </td>
+                @if (User.IsInRole("Koordinator"))
+                {
+                    <td>
+                        <form asp-controller="Basvurular" asp-action="EvrakGuncelle" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                            <input type="hidden" name="basvuruId" value="@Model.BasvuruId" />
+                            <input type="hidden" name="belgeTuru" value="ProtokolFormu" />
+                            <input type="file" name="yeniDosya" class="form-control form-control-sm" accept=".pdf,application/pdf" required />
+                            <button type="submit" class="btn btn-sm btn-warning fw-bold text-nowrap">Değiştir</button>
+                        </form>
+                    </td>
+                }
+            </tr>
+
+            <!-- 3. DERS KAYIT FORMU -->
+            <tr>
+                <td class="fw-bold">
+                    3. @(Model.BasvuruTuru == "Yandal" ? "Yandal Ders Kayıt Formu" : "Çift Anadal Ders Kayıt Formu")
+                </td>
+                <td class="text-center">
+                    @if (!string.IsNullOrEmpty(Model.DersKayitFormuYolu))
+                    {
+                        <a href="~/evraklar/@Model.DersKayitFormuYolu" target="_blank" class="btn btn-sm btn-outline-primary">PDF Görüntüle / İndir</a>
+                    }
+                    else
+                    {
+                        <span class="text-danger">Yüklenmemiş</span>
+                    }
+                </td>
+                @if (User.IsInRole("Koordinator"))
+                {
+                    <td>
+                        <form asp-controller="Basvurular" asp-action="EvrakGuncelle" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                            <input type="hidden" name="basvuruId" value="@Model.BasvuruId" />
+                            <input type="hidden" name="belgeTuru" value="DersKayitFormu" />
+                            <input type="file" name="yeniDosya" class="form-control form-control-sm" accept=".pdf,application/pdf" required />
+                            <button type="submit" class="btn btn-sm btn-warning fw-bold text-nowrap">Değiştir</button>
+                        </form>
+                    </td>
+                }
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="mt-4">
+        @if (User.IsInRole("Koordinator"))
+        {
+            @if (Model.Durum == "Beklemede")
+            {
+                <button type="button" class="btn btn-success me-2" onclick="onayKutusuAc('@Url.Action("Onayla", "Basvurular", new { id = Model.BasvuruId })')">Kabul Et</button>
+                <button type="button" class="btn btn-danger me-2" onclick="onayKutusuAc('@Url.Action("Reddet", "Basvurular", new { id = Model.BasvuruId })')">Reddet</button>
+            }
+            else
+            {
+                <div class="alert alert-warning fw-bold d-inline-block me-2 mb-0 py-2">
+                    Bu başvuru '@Model.Durum' olarak sonuçlandırılmıştır ve başvuru durumu değiştirilemez.
+                </div>
+            }
+        }
+        <a asp-action="Index" class="btn btn-secondary">Listeye Dön</a>
+    </div>
+</div>
+
+<!-- ONAY KUTUCUĞU (MODAL) -->
+<div class="modal fade" id="onayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title fw-bold text-dark">İşlem Onayı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <h5 class="fw-bold mb-2">Bu işlemi onaylıyor musunuz ?</h5>
+                <p class="text-muted mb-0">Onayladıktan sonra bu işlem geri alınamaz.</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Hayır</button>
+                <a id="onayEvetBtn" href="#" class="btn btn-primary px-4">Evet</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function onayKutusuAc(hedefUrl) {
+            document.getElementById("onayEvetBtn").setAttribute("href", hedefUrl);
+            var myModal = new bootstrap.Modal(document.getElementById('onayModal'));
+            myModal.show();
+        }
+    </script>
+}

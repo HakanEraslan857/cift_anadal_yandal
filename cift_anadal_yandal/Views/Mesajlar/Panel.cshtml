@@ -1,0 +1,51 @@
+﻿@model IEnumerable<cift_anadal_yandal.Models.Ogrenciler>
+
+@{
+    ViewData["Title"] = "Öğrenci Mesajları";
+    var tumMesajlar = ViewBag.TumMesajlar as List<cift_anadal_yandal.Models.Mesajlar> ?? new List<cift_anadal_yandal.Models.Mesajlar>();
+}
+
+<div class="container mt-4">
+    <h2>Öğrenci İletişim ve Mesaj Paneli</h2>
+    <p class="text-muted">Öğrencilerle yapılan tüm yazışmalar tarih ve saat bilgisiyle kalıcı olarak saklanmaktadır.</p>
+    <hr />
+
+    <table class="table table-bordered table-hover align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Öğrenci No</th>
+                <th>Ad Soyad</th>
+                <th>Ana Bölüm</th>
+                <th>Toplam Mesaj</th>
+                <th>Son Mesaj Tarihi</th>
+                <th>İşlem</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var ogr in Model)
+            {
+                var ogrMesajlari = tumMesajlar.Where(m => m.OgrenciId == ogr.OgrenciId).OrderByDescending(m => m.GonderimTarihi).ToList();
+                var sonMesaj = ogrMesajlari.FirstOrDefault();
+
+                <tr>
+                    <td class="fw-bold">@ogr.OgrenciNo</td>
+                    <td>@ogr.Ad @ogr.Soyad</td>
+                    <td>@ogr.AnaBolum?.BolumAdi</td>
+                    <td>
+                        <span class="badge @(ogrMesajlari.Any() ? "bg-primary" : "bg-secondary")">
+                            @ogrMesajlari.Count Mesaj
+                        </span>
+                    </td>
+                    <td>
+                        @(sonMesaj != null ? sonMesaj.GonderimTarihi.ToString("dd.MM.yyyy HH:mm:ss") : "-")
+                    </td>
+                    <td>
+                        <a asp-action="Sohbet" asp-route-ogrenciId="@ogr.OgrenciId" class="btn btn-sm btn-primary">
+                            Mesajları Gör / Yanıtla
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,313 @@
+﻿@model IEnumerable<IGrouping<cift_anadal_yandal.Models.Ogrenciler, cift_anadal_yandal.Models.OgrenciDersSecimleri>>
+
+@{
+    ViewData["Title"] = "Ders Seçim Onayları";
+    var tumDersler = ViewBag.TumDersler as List<cift_anadal_yandal.Models.Dersler> ?? new List<cift_anadal_yandal.Models.Dersler>();
+    var basvurular = ViewBag.Basvurular as List<cift_anadal_yandal.Models.Basvurular> ?? new List<cift_anadal_yandal.Models.Basvurular>();
+    int? acikOgrenciId = TempData["AcikOgrenciId"] as int?;
+}
+
+<div class="container mt-4 mb-5">
+    <h2>Öğrenci Ders Seçim ve Kayıt Evrakları Onay Listesi</h2>
+    <p class="text-muted">Öğrencilerin tercih ettiği dersleri ve kayıt evraklarını görmek/güncellemek için ilgili öğrenci satırına tıklayınız. (Liste yeniden eskiye sıralıdır)</p>
+    <hr />
+
+    @if (TempData["Hata"] != null)
+    {
+        <div class="alert alert-danger fw-bold">@TempData["Hata"]</div>
+    }
+    @if (TempData["Basari"] != null)
+    {
+        <div class="alert alert-success fw-bold">@TempData["Basari"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">Henüz ders seçimi yapan öğrenci bulunmamaktadır.</div>
+    }
+    else
+    {
+        <div class="table-responsive shadow-sm">
+            <table class="table table-bordered table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Öğrenci Numarası</th>
+                        <th>Adı Soyadı</th>
+                        <th>Başvuru Tarihi</th>
+                        <th>Başvuru Türü</th>
+                        <th class="text-center">Durum</th>
+                        <th class="text-center">Detay</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var grup in Model)
+                    {
+                        var ogrenci = grup.Key;
+                        var durum = grup.First().Durum;
+                        var basvuruTarihi = grup.Max(x => x.SecimTarihi);
+                        var toplamAkts = grup.Sum(x => x.Ders?.Akts ?? 0);
+                        var ogrenciBasvuru = basvurular.FirstOrDefault(b => b.OgrenciId == ogrenci?.OgrenciId);
+                        string collapseId = $"dersDetay_{ogrenci?.OgrenciId}";
+                        bool acikMi = (acikOgrenciId != null && acikOgrenciId == ogrenci?.OgrenciId);
+
+                        // Öğrencinin halihazırda tercih etmiş olduğu derslerin ID listesi (Tekrar seçilmesini engellemek için)
+                        var secilenDersIdleri = grup.Select(x => x.DersId).ToHashSet();
+                        var secilebilirDersler = tumDersler.Where(d => !secilenDersIdleri.Contains(d.DersId)).ToList();
+
+                        <!-- ÖĞRENCİ ÖZET SATIRI (TIKLANABİLİR) -->
+                        <tr style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="@(acikMi ? "true" : "false")">
+                            <td class="fw-bold">@ogrenci?.OgrenciNo</td>
+                            <td class="fw-bold text-primary">@ogrenci?.Ad @ogrenci?.Soyad</td>
+                            <td>@basvuruTarihi?.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>
+                                <span class="badge bg-info text-dark">@ogrenci?.BasvuruTuru</span>
+                                <small class="text-muted ms-1">(@ogrenci?.AnaBolum?.BolumAdi)</small>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge @(durum == "Onaylandı" ? "bg-success" : durum == "Reddedildi" ? "bg-danger" : "bg-warning text-dark")">
+                                    @durum
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-dark">
+                                    Dersleri ve Evrakları Gör (@grup.Count() Ders | @toplamAkts AKTS) ▼
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- TIKLAYINCA AÇILAN DETAY SATIRI -->
+                        <tr class="collapse @(acikMi ? "show" : "") bg-light" id="@collapseId">
+                            <td colspan="6" class="p-4">
+                                <!-- 1. BÖLÜM: ÖĞRENCİNİN KAYIT EVRAKLARI VE GÜNCELLEME -->
+                                @if (ogrenciBasvuru != null)
+                                {
+                                    <div class="card border-primary shadow-sm mb-4">
+                                        <div class="card-header bg-primary text-white">
+                                            <strong>@ogrenci?.OgrenciNo - @ogrenci?.Ad @ogrenci?.Soyad Kayıt Evrakları</strong>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <table class="table table-sm table-bordered align-middle mb-0 bg-white">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Evrak Adı</th>
+                                                        <th style="width: 180px;" class="text-center">Mevcut Evrak</th>
+                                                        @if (User.IsInRole("Koordinator"))
+                                                        {
+                                                            <th style="width: 400px;">Evrağı Güncelle / Değiştir (PDF)</th>
+                                                        }
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td class="fw-bold">1. Transkript (PDF)</td>
+                                                        <td class="text-center">
+                                                            @if (!string.IsNullOrEmpty(ogrenciBasvuru.TranskriptYolu))
+                                                            {
+                                                                <a href="~/evraklar/@ogrenciBasvuru.TranskriptYolu" target="_blank" class="btn btn-sm btn-outline-primary">PDF Görüntüle</a>
+                                                            }
+                                                            else
+                                                            {
+
+                                                                <span class="text-danger">Yok</span>
+                                                            }
+                                                        </td>
+                                                        @if (User.IsInRole("Koordinator"))
+                                                        {
+                                                            <td>
+                                                                <form asp-controller="Basvurular" asp-action="EvrakGuncelle" method="post" enctype="multipart/form-data" class="d-flex gap-1">
+                                                                    <input type="hidden" name="basvuruId" value="@ogrenciBasvuru.BasvuruId" />
+                                                                    <input type="hidden" name="belgeTuru" value="Transkript" />
+                                                                    <input type="hidden" name="returnUrl" value="@Url.Action("OnayListesi", "DersSecimi")" />
+                                                                    <input type="file" name="yeniDosya" class="form-control form-control-sm" accept=".pdf,application/pdf" required />
+                                                                    <button type="submit" class="btn btn-sm btn-warning fw-bold">Değiştir</button>
+                                                                </form>
+                                                            </td>
+                                                        }
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-bold">2. Kabul ve Ders Protokol Formu (PDF)</td>
+                                                        <td class="text-center">
+                                                            @if (!string.IsNullOrEmpty(ogrenciBasvuru.ProtokolFormuYolu))
+                                                            {
+                                                                <a href="~/evraklar/@ogrenciBasvuru.ProtokolFormuYolu" target="_blank" class="btn btn-sm btn-outline-primary">PDF Görüntüle</a>
+                                                            }
+                                                            else
+                                                            {
+
+                                                                <span class="text-danger">Yok</span>
+                                                            }
+                                                        </td>
+                                                        @if (User.IsInRole("Koordinator"))
+                                                        {
+                                                            <td>
+                                                                <form asp-controller="Basvurular" asp-action="EvrakGuncelle" method="post" enctype="multipart/form-data" class="d-flex gap-1">
+                                                                    <input type="hidden" name="basvuruId" value="@ogrenciBasvuru.BasvuruId" />
+                                                                    <input type="hidden" name="belgeTuru" value="ProtokolFormu" />
+                                                                    <input type="hidden" name="returnUrl" value="@Url.Action("OnayListesi", "DersSecimi")" />
+                                                                    <input type="file" name="yeniDosya" class="form-control form-control-sm" accept=".pdf,application/pdf" required />
+                                                                    <button type="submit" class="btn btn-sm btn-warning fw-bold">Değiştir</button>
+                                                                </form>
+                                                            </td>
+                                                        }
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="fw-bold">3. Ders Kayıt Formu (PDF)</td>
+                                                        <td class="text-center">
+                                                            @if (!string.IsNullOrEmpty(ogrenciBasvuru.DersKayitFormuYolu))
+                                                            {
+                                                                <a href="~/evraklar/@ogrenciBasvuru.DersKayitFormuYolu" target="_blank" class="btn btn-sm btn-outline-primary">PDF Görüntüle</a>
+                                                            }
+                                                            else
+                                                            {
+
+                                                                <span class="text-danger">Yok</span>
+                                                            }
+                                                        </td>
+                                                        @if (User.IsInRole("Koordinator"))
+                                                        {
+                                                            <td>
+                                                                <form asp-controller="Basvurular" asp-action="EvrakGuncelle" method="post" enctype="multipart/form-data" class="d-flex gap-1">
+                                                                    <input type="hidden" name="basvuruId" value="@ogrenciBasvuru.BasvuruId" />
+                                                                    <input type="hidden" name="belgeTuru" value="DersKayitFormu" />
+                                                                    <input type="hidden" name="returnUrl" value="@Url.Action("OnayListesi", "DersSecimi")" />
+                                                                    <input type="file" name="yeniDosya" class="form-control form-control-sm" accept=".pdf,application/pdf" required />
+                                                                    <button type="submit" class="btn btn-sm btn-warning fw-bold">Değiştir</button>
+                                                                </form>
+                                                            </td>
+                                                        }
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                }
+
+                                <!-- 2. BÖLÜM: ÖĞRENCİNİN TERCİH ETTİĞİ DERSLER -->
+                                <div class="card border-secondary shadow-sm">
+                                    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                                        <strong>@ogrenci?.OgrenciNo - @ogrenci?.Ad @ogrenci?.Soyad Tarafından Tercih Edilen Dersler</strong>
+                                        <span class="badge bg-light text-dark fs-6">Toplam AKTS: @toplamAkts</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-sm table-bordered table-striped align-middle mb-3 bg-white">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width: 110px;">Ders Kodu</th>
+                                                    <th>Ders Adı</th>
+                                                    <th style="width: 80px;" class="text-center">AKTS</th>
+                                                    <th>Muafiyet / Açıklama</th>
+                                                    @if (User.IsInRole("Koordinator"))
+                                                    {
+                                                        <th style="width: 360px;">Başka Dersle Değiştir</th>
+                                                        <th style="width: 120px;" class="text-center">İptal İşlemi</th>
+                                                    }
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var secim in grup)
+                                                {
+                                                    <tr>
+                                                        <td class="fw-bold">@secim.Ders?.DersKodu</td>
+                                                        <td>@secim.Ders?.DersAdi</td>
+                                                        <td class="text-center fw-bold">@secim.Ders?.Akts</td>
+                                                        <td class="small text-muted">@secim.Ders?.Aciklama</td>
+                                                        @if (User.IsInRole("Koordinator"))
+                                                        {
+                                                            <td>
+                                                                @if (secilebilirDersler.Any())
+                                                                {
+                                                                    <form asp-action="DersDegistir" method="post" class="d-flex gap-1">
+                                                                        <input type="hidden" name="secimId" value="@secim.SecimId" />
+                                                                        <select name="yeniDersId" class="form-select form-select-sm" required>
+                                                                            <option value="" selected disabled>-- Yeni Ders Seçiniz --</option>
+                                                                            @foreach (var d in secilebilirDersler)
+                                                                            {
+                                                                                <option value="@d.DersId">
+                                                                                    @d.DersKodu - @d.DersAdi (@d.Akts AKTS)
+                                                                                </option>
+                                                                            }
+                                                                        </select>
+                                                                        <button type="submit" class="btn btn-sm btn-primary">Değiştir</button>
+                                                                    </form>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="text-muted small">Seçilebilecek başka ders kalmadı.</span>
+                                                                }
+                                                            </td>
+                                                            <td class="text-center">
+                                                                <form asp-action="DersIptalEt" method="post" onsubmit="return confirm('Bu dersi öğrencinin tercihlerinden iptal etmek (çıkarmak) istediğinize emin misiniz?');">
+                                                                    <input type="hidden" name="secimId" value="@secim.SecimId" />
+                                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Dersi İptal Et</button>
+                                                                </form>
+                                                            </td>
+                                                        }
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+
+                                        @if (User.IsInRole("Koordinator"))
+                                        {
+                                            <div class="d-flex justify-content-end align-items-center gap-2 mt-3">
+                                                @if (durum == "Koordinatör Onayı Bekliyor")
+                                                {
+                                                    <button type="button" class="btn btn-success fw-bold" onclick="secimOnayKutusuAc('@Url.Action("SecimOnayla", "DersSecimi", new { ogrenciId = ogrenci?.OgrenciId })')">
+                                                        Tüm Ders Seçimini Onayla
+                                                    </button>
+                                                    <button type="button" class="btn btn-danger fw-bold" onclick="secimOnayKutusuAc('@Url.Action("SecimReddet", "DersSecimi", new { ogrenciId = ogrenci?.OgrenciId })')">
+                                                        Tüm Seçimi Reddet
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary p-2">Genel Onay Durumu: @durum</span>
+                                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="secimOnayKutusuAc('@Url.Action("SecimOnayla", "DersSecimi", new { ogrenciId = ogrenci?.OgrenciId })')">
+                                                        Onaylandı Olarak Güncelle
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="secimOnayKutusuAc('@Url.Action("SecimReddet", "DersSecimi", new { ogrenciId = ogrenci?.OgrenciId })')">
+                                                        Reddedildi Olarak Güncelle
+                                                    </button>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- ONAY KUTUCUĞU (MODAL) -->
+<div class="modal fade" id="secimOnayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title fw-bold text-dark">İşlem Onayı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <h5 class="fw-bold mb-2">Bu işlemi onaylıyor musunuz ?</h5>
+                <p class="text-muted mb-0">Öğrencinin ders seçimi durumu güncellenecektir.</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Hayır</button>
+                <a id="secimOnayEvetBtn" href="#" class="btn btn-primary px-4">Evet</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function secimOnayKutusuAc(hedefUrl) {
+            document.getElementById("secimOnayEvetBtn").setAttribute("href", hedefUrl);
+            var myModal = new bootstrap.Modal(document.getElementById('secimOnayModal'));
+            myModal.show();
+        }
+    </script>
+}

@@ -1,0 +1,65 @@
+@model IEnumerable<cift_anadal_yandal.Models.Ogrenciler>
+
+@{
+    ViewData["Title"] = "Öğrenci Yönetimi";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Öğrenci Yönetimi</h2>
+        <a asp-action="Create" class="btn btn-primary">+ Yeni Öğrenci ve Başvuru Hakkı Ekle</a>
+    </div>
+
+    <table class="table table-bordered table-striped align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>Öğrenci No</th>
+                <th>Ad Soyad</th>
+                <th>GNO</th>
+                <th>Ana Bölüm</th>
+                <th>Başvuru Türü</th>
+                <th>Başvuru Hakkı Durumu</th>
+                <th>İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="fw-bold">@item.OgrenciNo</td>
+                    <td>@item.Ad @item.Soyad</td>
+                    <td>@item.GenelNotOrtalamasi</td>
+                    <td>@item.AnaBolum?.BolumAdi</td>
+                    <td><span class="badge bg-info text-dark">@item.BasvuruTuru</span></td>
+                    <td>
+                        @if (item.BasvuruAcikMi)
+                        {
+                            <span class="badge bg-success">Başvuru Açık (1 Hak)</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Başvuru Yapıldı (Kapalı)</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2 flex-wrap">
+                            @if (!item.BasvuruAcikMi)
+                            {
+                                <form asp-action="YeniBasvuruAc" method="post" class="d-inline-flex gap-1">
+                                    <input type="hidden" name="id" value="@item.OgrenciId" />
+                                    <select name="yeniBasvuruTuru" class="form-select form-select-sm" style="width:130px;">
+                                        <option value="Çift Anadal" selected="@(item.BasvuruTuru == "Çift Anadal")">Çift Anadal</option>
+                                        <option value="Yandal" selected="@(item.BasvuruTuru == "Yandal")">Yandal</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-warning fw-bold">Yeni Başvuru Aç</button>
+                                </form>
+                            }
+                            <a asp-controller="Mesajlar" asp-action="Sohbet" asp-route-ogrenciId="@item.OgrenciId" class="btn btn-sm btn-outline-primary">Mesajlaş</a>
+                            <a asp-action="Edit" asp-route-id="@item.OgrenciId" class="btn btn-sm btn-outline-secondary">Düzenle</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

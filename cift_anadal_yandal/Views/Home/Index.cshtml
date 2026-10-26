@@ -1,0 +1,46 @@
+﻿@{
+    ViewData["Title"] = "Ana Sayfa";
+}
+
+<div class="text-center mt-5">
+    <h1 class="display-4 fw-bold text-primary mb-4">Çift Anadal / Yandal Başvuru Sistemi</h1>
+    <p class="lead text-muted mb-5">Lütfen sisteme giriş yapmak istediğiniz rolü seçiniz.</p>
+
+    <div class="row justify-content-center mt-5">
+        <!-- Öğrenci Kartı -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0 bg-light rounded-3">
+                <div class="card-body py-5">
+                    <i class="fa fa-user-graduate fa-3x text-primary mb-3"></i>
+                    <h4 class="card-title fw-bold">Öğrenci Girişi</h4>
+                    <p class="card-text text-muted">ÇAP/Yandal başvurusu yapmak veya başvuru durumunuzu sorgulamak için giriş yapın.</p>
+                    <a asp-controller="Kullanicilar" asp-action="Login" asp-route-rol="Ogrenci" class="btn btn-outline-primary btn-lg mt-3 w-100">Giriş Yap</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Koordinatör Kartı -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0 bg-light rounded-3">
+                <div class="card-body py-5">
+                    <i class="fa fa-users-cog fa-3x text-success mb-3"></i>
+                    <h4 class="card-title fw-bold">Koordinatör Girişi</h4>
+                    <p class="card-text text-muted">Başvuruları incelemek, onay/red vermek ve başvuruları yönetmek için giriş yapın.</p>
+                    <a asp-controller="Kullanicilar" asp-action="Login" asp-route-rol="Koordinator" class="btn btn-outline-success btn-lg mt-3 w-100">Giriş Yap</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bölüm Başkanı Kartı -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-0 bg-light rounded-3">
+                <div class="card-body py-5">
+                    <i class="fa fa-user-tie fa-3x text-danger mb-3"></i>
+                    <h4 class="card-title fw-bold">Bölüm Başkanı Girişi</h4>
+                    <p class="card-text text-muted">Sisteme düşen tüm başvuruları ve durumlarını görüntülemek için giriş yapın.</p>
+                    <a asp-controller="Kullanicilar" asp-action="Login" asp-route-rol="BolumBaskani" class="btn btn-outline-danger btn-lg mt-3 w-100">Giriş Yap</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
